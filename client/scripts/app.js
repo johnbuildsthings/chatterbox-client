@@ -1,19 +1,23 @@
 // YOUR CODE HERE:
-var roomName = null;
-var friends = {};
-var request = function(){
+
+var app = {}
+app.init = function(){};
+app.server = 'https://api.parse.com/1/classes/chatterbox';
+app.roomName = null;
+app.friends = {};
+app.fetch = function(){
   $.ajax({
-    url: 'https://api.parse.com/1/classes/chatterbox',
+    url: app.server,
     type: 'GET',
     success: function(data){
-      update(data);
+      app.update(data);
     },
     error: function(data){
       console.log('chatterbox: Fail to recieve data')
     }
   });
 }
-var once = function(array) {
+app.once = function(array) {
   var current = array;
   return function(newArray) {
     var newItems = [];
@@ -30,122 +34,95 @@ var once = function(array) {
       }
     }
     if(newItems.length > 0) {
-      makeOptions(newItems);
+      app.makeOptions(newItems);
     }
   }
 }
 
-var onceRoomName = once([]);
+app.onceRoomName = app.once([]);
 
-var update = function(data) {
-  var $display = $('.display');
+app.clearMessages = function(){
+  var $display = $('#chats');
+  $display.remove();
+  $('#main').append('<div id="#chats"> </div>');
+}
+
+
+app.update = function(data) {
+  var $display = $('#chats');
   var $messages = $('.message');
   var messageData = [];
   var contents = data.results;
   var roomNames = {};
 
   for(var i = 0; i < contents.length; i++) {
-    var username = parseHTML(contents[i].username);
-    var text = parseHTML(contents[i].text);
-    var room = parseHTML(contents[i].roomname);
+    var username = this.parseHTML(contents[i].username);
+    var text = this.parseHTML(contents[i].text);
+    var room = this.parseHTML(contents[i].roomname);
     roomNames[room] = true;
     messageData.push({username: username, text: text, room: room});
   }
 
-  onceRoomName(Object.keys(roomNames));
+  this.onceRoomName(Object.keys(roomNames));
   
-  $display.remove();
-  $('#main').append('<div class="display"> </div>')
-  if(roomName === null) {
-    display(messageData);
+  if(this.roomName === null) {
+    this.addMessage(messageData);
   } else {
     var roomMessage = [];
     for(var i = 0; i < messageData.length; i++) {
-      if(messageData[i].room === roomName) {
+      if(messageData[i].room === this.roomName) {
         roomMessage.push(messageData[i]);
       }
     }
-    display(roomMessage);
+    this.addMessage(roomMessage);
   }
 
 };
 
 
-var makeFriend = function(event){
+app.makeFriend = function(event){
   var username = event.target.innerText;
-  friends[username] = true;
+  this.friends[username] = true;
 }
 
-var display = function(array) {
-  var $display = $('.display');
+app.addMessage = function(array) {
+  var $display = $('#chats');
   for(var i = 0; i < array.length; i++) {
     var username = array[i].username;
     var text = array[i].text;
     var $text = '';
-    if(friends.hasOwnProperty(username)){
+    if(app.friends.hasOwnProperty(username)){
       $text = "<div class='text' style='font-weight: bold'>"+text+'</div>';
     }else{
       $text = "<div class='text'>"+text+'</div>';
     }
     $display.append('<div class="message"><div class="username">'+username+'</div>'+$text+'</div>');
+    console.log($display.children());
   }
 };
-$(document).on('click', '.username' , function(){makeFriend(event)});
+$(document).on('click', '.username' , function(){app.makeFriend(event)});
 
 
-var makeOptions = function(array){
+app.makeOptions = function(array){
   for(var i=0;i<array.length;i++){
     $('select').append('<option id="'+array[i]+'" value="'+array[i]+'">'+array[i]+'</option>');
   }
 };
 
 
-// var display = function(data){
-//   var $display = $('.display');
-//   var messages = $('.message');
-//   var rooms = {};
-
-//   var results = data.results;
-//   if(messages.length > 100){
-//     var diff = messages.length - 100;
-//     for(var i=0;i<diff;i++){
-//       messages[i].remove();      
-//     }
-//   }
-//   for(var i=0;i<results.length;i++){
-//     var username = parseHTML(results[i].username);
-//     var text = parseHTML(results[i].text);
-//     var room =  parseHTML(results[i].roomname);
-//     rooms[room] = true;
-//     if(room === roomName || roomName === null){
-//       console.log(roomName === room);
-//       // debugger;
-//       $display.append('<div class="message">'+username+': <br>'+text+'</div>');
-//     }
-//   }
-//   for(var key in rooms) {
-//     var id = "#"+key.split(' ').join('');
-//     // console.log(id);
-//     if(document.getElementById(id) === null){
-//       var option = $("<option id='"+id+"' value='"+key+"'>" + key + "</option>");
-//       $("#rooms").append(option);
-//     }
-//   }
-// }
-
-var changeRoom = function(data){
+app.changeRoom = function(data){
   var selected = data.options[data.selectedIndex].value;
-  roomName = selected;
+  this.roomName = selected;
   if(selected === 'New Room'){
     var newName = prompt('enter name of new room');
     var option = $("<option id='"+newName+"' value='"+newName+"''>"+newName+"</option>");
     $('#rooms').append(option);
-    roomName = newName;
+    this.roomName = newName;
   }
 };
 
 
-var parseHTML = function(info){
+app.parseHTML = function(info){
   var dangerousChars = {
     '<' : '&lt',
     '>' : '&gt',
@@ -163,15 +140,18 @@ var parseHTML = function(info){
   return stringInfo.join('');
 }
 
-setInterval(request,1000);
+setInterval(app.fetch,1000);
 
 
-var submit = function(){
+app.buildMessage = function(){
   var message = {
     username: 'BossMan',
     text: document.getElementById('userMessage').value.toString(),
-    roomname: roomName
+    roomname: this.roomName
   };
+  this.send(message);
+}
+app.send = function(message){
 
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
@@ -188,18 +168,3 @@ var submit = function(){
   })
 }
 
-
-// $.ajax({
-//   // This is the url you should use to communicate with the parse API server.
-//   url: 'https://api.parse.com/1/classes/chatterbox',
-//   type: 'POST',
-//   data: JSON.stringify(message),
-//   contentType: 'application/json',
-//   success: function (data) {
-//     console.log('chatterbox: Message sent');
-//   },
-//   error: function (data) {
-//     // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-//     console.error('chatterbox: Failed to send message');
-//   }
-// });
