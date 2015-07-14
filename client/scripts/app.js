@@ -13,6 +13,29 @@ var request = function(){
     }
   });
 }
+var once = function(array) {
+  var current = array;
+  return function(newArray) {
+    var newItems = [];
+    for(var i = 0; i < newArray.length; i++) {
+      var wasFound = false;
+      for(var j = 0; j < current.length; j++) {
+        if(newArray[i] === current[j]) {
+          wasFound = true;
+        }
+      }
+      if(!wasFound) {
+        newItems.push(newArray[i]);
+        current.push(newArray[i]);
+      }
+    }
+    if(newItems.length > 0) {
+      makeOptions(newItems);
+    }
+  }
+}
+
+var onceRoomName = once([]);
 
 var update = function(data) {
   var $display = $('.display');
@@ -29,8 +52,10 @@ var update = function(data) {
     messageData.push({username: username, text: text, room: room});
   }
 
-  makeOptions(Object.keys(roomNames));
-
+  onceRoomName(Object.keys(roomNames));
+  
+  $display.remove();
+  $('#main').append('<div class="display"> </div>')
   if(roomName === null) {
     display(messageData);
   } else {
@@ -59,6 +84,7 @@ var makeOptions = function(array){
     $('select').append('<option id="'+array[i]+'" value="'+array[i]+'">'+array[i]+'</option>');
   }
 };
+
 
 // var display = function(data){
 //   var $display = $('.display');
@@ -97,7 +123,6 @@ var changeRoom = function(data){
   var selected = data.options[data.selectedIndex].value;
   roomName = selected;
   if(selected === 'New Room'){
-    console.log(selected === 'New Room');
     var newName = prompt('enter name of new room');
     var option = $("<option id='"+newName+"' value='"+newName+"''>"+newName+"</option>");
     $('#rooms').append(option);
