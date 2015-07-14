@@ -67,7 +67,6 @@ app.update = function(data) {
   
   this.clearMessages();
 
-  console.log($display);
   if(this.roomName === null || this.roomName === 'Main') {
     this.addMessage(messageData);
   } else {
@@ -146,8 +145,9 @@ setInterval(app.fetch,1000);
 
 
 app.buildMessage = function(){
+  var username = window.location.search.split('=')[1];
   var message = {
-    username: 'BossMan',
+    username: username,
     text: document.getElementById('userMessage').value.toString(),
     roomname: this.roomName
   };
