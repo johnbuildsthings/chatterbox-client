@@ -34,7 +34,7 @@ app.once = function(array) {
       }
     }
     if(newItems.length > 0) {
-      app.makeOptions(newItems);
+      app.addRoom(newItems);
     }
   }
 }
@@ -42,9 +42,9 @@ app.once = function(array) {
 app.onceRoomName = app.once([]);
 
 app.clearMessages = function(){
-  var $display = $('#chats');
+  var $display = $('.display');
   $display.remove();
-  $('#main').append('<div id="#chats"> </div>');
+  $('#main').append('<div id="#chats" class="display"> </div>');
 }
 
 
@@ -65,7 +65,10 @@ app.update = function(data) {
 
   this.onceRoomName(Object.keys(roomNames));
   
-  if(this.roomName === null) {
+  this.clearMessages();
+
+  console.log($display);
+  if(this.roomName === null || this.roomName === 'Main') {
     this.addMessage(messageData);
   } else {
     var roomMessage = [];
@@ -80,13 +83,13 @@ app.update = function(data) {
 };
 
 
-app.makeFriend = function(event){
+app.addFriend = function(event){
   var username = event.target.innerText;
   this.friends[username] = true;
 }
 
 app.addMessage = function(array) {
-  var $display = $('#chats');
+  var $display = $('.display');
   for(var i = 0; i < array.length; i++) {
     var username = array[i].username;
     var text = array[i].text;
@@ -97,13 +100,12 @@ app.addMessage = function(array) {
       $text = "<div class='text'>"+text+'</div>';
     }
     $display.append('<div class="message"><div class="username">'+username+'</div>'+$text+'</div>');
-    console.log($display.children());
   }
 };
-$(document).on('click', '.username' , function(){app.makeFriend(event)});
+$(document).on('click', '.username' , function(){app.addFriend(event)});
 
 
-app.makeOptions = function(array){
+app.addRoom = function(array){
   for(var i=0;i<array.length;i++){
     $('select').append('<option id="'+array[i]+'" value="'+array[i]+'">'+array[i]+'</option>');
   }

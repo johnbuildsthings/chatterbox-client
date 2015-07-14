@@ -82,14 +82,13 @@ describe('chatterbox', function() {
         };
 
         app.addMessage([message]);
-        console.log(app.addMessage);
         expect($('#chats').children().context.childElementCount).to.equal(1);
       });
 
       it('should be able to add rooms to the DOM', function(){
-        app.addRoom('superLobby');
+        app.addRoom(['superLobby']);
 
-        expect($('#roomSelect').children().length).to.equal(1);
+        expect($('#superLobby').length).to.equal(1);
       });
 
     });
@@ -98,14 +97,14 @@ describe('chatterbox', function() {
       it('should add a friend upon clicking their username', function(){
         sinon.spy(app, 'addFriend');
 
-        app.addMessage({
+        app.addMessage([{
           username: 'Mel Brooks',
           text: 'I didn\'t get a harumph outa that guy.!',
           roomname: 'lobby'
-        });
+        }]);
 
-        app.init();
-
+        // app.init();
+        console.log($('.username'));
         $('#main').find('.username').trigger('click');
         expect(app.addFriend.called).to.be.true;
 
@@ -113,14 +112,14 @@ describe('chatterbox', function() {
       });
 
       it('should try to send a message upon clicking submit', function(){
-        sinon.spy(app, 'handleSubmit');
+        sinon.spy(app, 'buildMessage');
 
         $('#message').val('Why so many Mel Brooks quotes?');
 
         app.init();
 
         $('#send .submit').trigger('submit');
-        expect(app.handleSubmit.calledOnce).to.be.true;
+        expect(app.buildMessage.calledOnce).to.be.true;
 
         app.handleSubmit.restore();
       });
