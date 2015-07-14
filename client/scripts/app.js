@@ -1,6 +1,6 @@
 // YOUR CODE HERE:
 var roomName = null;
-
+var friends = {};
 var request = function(){
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
@@ -60,7 +60,7 @@ var update = function(data) {
     display(messageData);
   } else {
     var roomMessage = [];
-    for(var i = 0; i < messageData; i++) {
+    for(var i = 0; i < messageData.length; i++) {
       if(messageData[i].room === roomName) {
         roomMessage.push(messageData[i]);
       }
@@ -70,14 +70,28 @@ var update = function(data) {
 
 };
 
+
+var makeFriend = function(event){
+  var username = event.target.innerText;
+  friends[username] = true;
+}
+
 var display = function(array) {
   var $display = $('.display');
   for(var i = 0; i < array.length; i++) {
     var username = array[i].username;
     var text = array[i].text;
-    $display.append('<div class="message">'+username+': <br>'+text+'</div>');
+    var $text = '';
+    if(friends.hasOwnProperty(username)){
+      $text = "<div class='text' style='font-weight: bold'>"+text+'</div>';
+    }else{
+      $text = "<div class='text'>"+text+'</div>';
+    }
+    $display.append('<div class="message"><div class="username">'+username+'</div>'+$text+'</div>');
   }
 };
+$(document).on('click', '.username' , function(){makeFriend(event)});
+
 
 var makeOptions = function(array){
   for(var i=0;i<array.length;i++){
@@ -150,6 +164,7 @@ var parseHTML = function(info){
 }
 
 setInterval(request,1000);
+
 
 var submit = function(){
   var message = {
