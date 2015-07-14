@@ -15,12 +15,14 @@
   <body>
     <div id="main">
       <h1>chatterbox</h1>
-      <select name="rooms" id="rooms">
+      <select name="rooms" id="rooms" onchange='changeRoom(this)'>
+        <option id='newRoom'>New Room</option>
         
       </select>
       <input type='text' id='userMessage' />
       <button onclick='submit()'>Submit</button>
-      <div class="display" ></div>
+      <div class="display" >
+      </div>
       <!-- Your HTML goes here! -->
     </div>
   </body>

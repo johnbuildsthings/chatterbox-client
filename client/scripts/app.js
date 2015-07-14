@@ -1,11 +1,12 @@
 // YOUR CODE HERE:
-var update = function(){
+var roomName = null;
+
+var request = function(){
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'GET',
     success: function(data){
-      display(data);
-      console.log(data);
+      update(data);
     },
     error: function(data){
       console.log('chatterbox: Fail to recieve data')
@@ -13,36 +14,97 @@ var update = function(){
   });
 }
 
-var display = function(data){
+var update = function(data) {
   var $display = $('.display');
-  var messages = $('.message');
-  var rooms = {};
+  var $messages = $('.message');
+  var messageData = [];
+  var contents = data.results;
+  var roomNames = {};
 
-  var results = data.results;
-  if(messages.length > 100){
-    var diff = messages.length - 100;
-    for(var i=0;i<diff;i++){
-      messages[i].remove();      
-    }
+  for(var i = 0; i < contents.length; i++) {
+    var username = parseHTML(contents[i].username);
+    var text = parseHTML(contents[i].text);
+    var room = parseHTML(contents[i].roomname);
+    roomNames[room] = true;
+    messageData.push({username: username, text: text, room: room});
   }
-  for(var i=0;i<results.length;i++){
-    // debugger;
-    var username = parseHTML(results[i].username);
-    var text = parseHTML(results[i].text);
-    rooms[parseHTML(results[i].roomname)] = true;
-    // console.log(rooms);
+
+  makeOptions(Object.keys(roomNames));
+
+  if(roomName === null) {
+    display(messageData);
+  } else {
+    var roomMessage = [];
+    for(var i = 0; i < messageData; i++) {
+      if(messageData[i].room === roomName) {
+        roomMessage.push(messageData[i]);
+      }
+    }
+    display(roomMessage);
+  }
+
+};
+
+var display = function(array) {
+  var $display = $('.display');
+  for(var i = 0; i < array.length; i++) {
+    var username = array[i].username;
+    var text = array[i].text;
     $display.append('<div class="message">'+username+': <br>'+text+'</div>');
   }
-  for(var key in rooms) {
-    var id = "#"+key.split(' ').join('');
-    // console.log(id);
-    console.log(document.getElementById(id));
-    if(document.getElementById(id) === null){
-      var option = $("<option id='"+id+"'>" + key + "</option>");
-      $("#rooms").append(option);
-    }
+};
+
+var makeOptions = function(array){
+  for(var i=0;i<array.length;i++){
+    $('select').append('<option id="'+array[i]+'" value="'+array[i]+'">'+array[i]+'</option>');
   }
-}
+};
+
+// var display = function(data){
+//   var $display = $('.display');
+//   var messages = $('.message');
+//   var rooms = {};
+
+//   var results = data.results;
+//   if(messages.length > 100){
+//     var diff = messages.length - 100;
+//     for(var i=0;i<diff;i++){
+//       messages[i].remove();      
+//     }
+//   }
+//   for(var i=0;i<results.length;i++){
+//     var username = parseHTML(results[i].username);
+//     var text = parseHTML(results[i].text);
+//     var room =  parseHTML(results[i].roomname);
+//     rooms[room] = true;
+//     if(room === roomName || roomName === null){
+//       console.log(roomName === room);
+//       // debugger;
+//       $display.append('<div class="message">'+username+': <br>'+text+'</div>');
+//     }
+//   }
+//   for(var key in rooms) {
+//     var id = "#"+key.split(' ').join('');
+//     // console.log(id);
+//     if(document.getElementById(id) === null){
+//       var option = $("<option id='"+id+"' value='"+key+"'>" + key + "</option>");
+//       $("#rooms").append(option);
+//     }
+//   }
+// }
+
+var changeRoom = function(data){
+  var selected = data.options[data.selectedIndex].value;
+  roomName = selected;
+  if(selected === 'New Room'){
+    console.log(selected === 'New Room');
+    var newName = prompt('enter name of new room');
+    var option = $("<option id='"+newName+"' value='"+newName+"''>"+newName+"</option>");
+    $('#rooms').append(option);
+    roomName = newName;
+  }
+};
+
 
 var parseHTML = function(info){
   var dangerousChars = {
@@ -53,7 +115,6 @@ var parseHTML = function(info){
     "'" : '&quot',
     '/' : '&#47'
   }
-  // debugger;
   var stringInfo = String(info).split('');
   for(var i=0;i<stringInfo.length;i++){
     if(dangerousChars.hasOwnProperty(stringInfo[i])){
@@ -63,16 +124,15 @@ var parseHTML = function(info){
   return stringInfo.join('');
 }
 
-setInterval(update,1000);
+setInterval(request,1000);
 
 var submit = function(){
   var message = {
     username: 'BossMan',
     text: document.getElementById('userMessage').value.toString(),
-    roomname: 'lobby'
+    roomname: roomName
   };
 
-  console.log(message);
   $.ajax({
     url: 'https://api.parse.com/1/classes/chatterbox',
     type: 'POST',
